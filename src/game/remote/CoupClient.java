@@ -23,6 +23,10 @@ public class CoupClient {
 			System.out.println("Improper usage.  Must enter arg: [host IP]");
 			System.exit(1);
 		}
+		
+        BufferedReader stdIn =
+                new BufferedReader(new InputStreamReader(System.in));
+		
 		String hostName = args[0];
 		Socket initialConnectSocket = getSocket(hostName, 4444); //initial connection port number
 		int portNum = -1;
@@ -30,9 +34,42 @@ public class CoupClient {
 			System.out.println("Waiting for further input from server");
 			BufferedReader initialInput = new BufferedReader(
 					new InputStreamReader(initialConnectSocket.getInputStream()));
-			String readLine = initialInput.readLine();
+			PrintWriter initialOutput = new PrintWriter(initialConnectSocket.getOutputStream(), true);
+			String firstReadLine = initialInput.readLine();
 			System.out.println("Received input from server");
-			portNum = Integer.parseInt(readLine.split(":")[1]);
+			
+			String[] gameOptionsInfo = firstReadLine.split("\\+\\+\\+"); //First it sends a list of available games.
+			if(gameOptionsInfo.length > 1){
+				System.out.println("Existing games: " + gameOptionsInfo[1]);
+				System.out.println("Choose an existing game above to join, or enter the name of a new game you'd like to start:");
+			}else{
+				System.out.println("No games currently waiting on players.  Enter the name of a new game to start.");
+			}
+			String gameNameFromUser = stdIn.readLine();
+			
+			//TODO receive updates from server every so often?? - more games added?
+			
+			//TODO might assign specific port first?
+			
+			initialOutput.println(gameNameFromUser); //Sending game name back
+			
+			String serverResponse = initialInput.readLine();
+			if(serverResponse.startsWith("NewGame")){ //User is starting a new game
+				int numPlayers = -1;
+				while(numPlayers < 2 || numPlayers > 6){
+					System.out.println("Enter number of players to play this game (2-6):");
+					String numberFromUser = stdIn.readLine();
+					try{
+						numPlayers = Integer.parseInt(numberFromUser);
+					}catch(NumberFormatException nfe){
+						System.out.println("Not a valid number.  Try again.");
+					}
+				}
+				initialOutput.println(numPlayers);
+				serverResponse = initialInput.readLine();
+			}
+			
+			portNum = Integer.parseInt(serverResponse.split(":")[1]);
 			System.out.println("Server says to connect on port " + portNum);
 		} catch (IOException e1) {
 			throw new RuntimeException("Could not get connection port from server");
@@ -43,8 +80,7 @@ public class CoupClient {
         	PrintWriter out = new PrintWriter(coupSocket.getOutputStream(), true);
         	BufferedReader in = new BufferedReader(
         			new InputStreamReader(coupSocket.getInputStream()));
-            BufferedReader stdIn =
-                new BufferedReader(new InputStreamReader(System.in));
+
 
             System.out.println(in.readLine());
             

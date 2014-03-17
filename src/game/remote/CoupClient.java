@@ -38,9 +38,13 @@ public class CoupClient {
 			String firstReadLine = initialInput.readLine();
 			System.out.println("Received input from server");
 			
-			String[] gameOptionsInfo = firstReadLine.split("\\+\\+\\+"); //First it sends a list of available games.
+			String[] gameOptionsInfo = firstReadLine.split("\\+\\+\\+\\+\\+\\+"); //First it sends a list of available games.
 			if(gameOptionsInfo.length > 1){
-				System.out.println("Existing games: " + gameOptionsInfo[1]);
+				System.out.println("Existing games: ");
+				String[] allGames = gameOptionsInfo[1].split("\\+\\+\\+");
+				for(String game : allGames){
+					System.out.println(game);
+				}
 				System.out.println("Choose an existing game above to join, or enter the name of a new game you'd like to start:");
 			}else{
 				System.out.println("No games currently waiting on players.  Enter the name of a new game to start.");
@@ -80,7 +84,6 @@ public class CoupClient {
         	PrintWriter out = new PrintWriter(coupSocket.getOutputStream(), true);
         	BufferedReader in = new BufferedReader(
         			new InputStreamReader(coupSocket.getInputStream()));
-
 
             System.out.println(in.readLine());
             

@@ -21,6 +21,7 @@ import java.util.concurrent.Executors;
 public class CoupServer {
 	
 	private static Map<String,Integer> gameNameToNumberAvailableSeats = new HashMap<String,Integer>();
+	private static Map<String,List<String>> gameNameToPlayerNames = new HashMap<String,List<String>>();
 	private static Map<String,List<PrintWriter>> gameNameToPrintWriters = new HashMap<String,List<PrintWriter>>();
 	private static Map<String,List<BufferedReader>> gameNameToBufferedReaders = new HashMap<String,List<BufferedReader>>();
 	
@@ -84,7 +85,7 @@ public class CoupServer {
 			Set<String> currentlyAvailableGames) {
 		StringBuilder builder = new StringBuilder();
 		for(String game : currentlyAvailableGames){
-			builder.append(game).append(" needs ").append(gameNameToNumberAvailableSeats.get(game)).append(" more players.");
+			builder.append("+++").append(game).append(" already has players ").append(gameNameToPlayerNames.get(game)).append(" and needs ").append(gameNameToNumberAvailableSeats.get(game)).append(" more players.");
 			 
 		}
 		return builder.toString();
@@ -101,27 +102,26 @@ public class CoupServer {
 		gameNameToNumberAvailableSeats.put(gameName, numPlayersForGame - 1);
 		gameNameToPrintWriters.put(gameName, new ArrayList<PrintWriter>());
 		gameNameToBufferedReaders.put(gameName, new ArrayList<BufferedReader>());
+		gameNameToPlayerNames.put(gameName, new ArrayList<String>());
 		
 		System.out.println("Sending connection info to client");
-		Socket clientSocket = createClientSocket(availablePortNumbers, initialConnectionPrintWriter);
-		gameNameToPrintWriters.get(gameName).add(new PrintWriter(clientSocket.getOutputStream(), true));
-		gameNameToBufferedReaders.get(gameName).add(new BufferedReader(
-				new InputStreamReader(clientSocket.getInputStream())));
+		createClientSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
+
 	}
 
 	private static void startGame(final String gameName) {
 		System.out.println("Starting game " + gameName);
 		final List<PrintWriter> printWriters = gameNameToPrintWriters.get(gameName);
 		final List<BufferedReader> bufferedReaders = gameNameToBufferedReaders.get(gameName);
+		final List<String> playerNames = gameNameToPlayerNames.get(gameName);
 		
 		gameThreads.execute(new Runnable(){
 
 			@Override
 			public void run() {
 				try {
-					startGame(printWriters, bufferedReaders);
+					playGame(printWriters, bufferedReaders, playerNames);
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 			}
@@ -139,14 +139,11 @@ public class CoupServer {
 		gameNameToNumberAvailableSeats.put(gameName, gameNameToNumberAvailableSeats.get(gameName) - 1);
 		
 		//Assign port
-		Socket clientSocket = createClientSocket(availablePortNumbers, initialConnectionPrintWriter);
-		gameNameToPrintWriters.get(gameName).add(new PrintWriter(clientSocket.getOutputStream(), true));
-		gameNameToBufferedReaders.get(gameName).add(new BufferedReader(
-				new InputStreamReader(clientSocket.getInputStream())));
+		createClientSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
 	}
 
-	private static Socket createClientSocket(Set<Integer> availablePortNumbers,
-			PrintWriter initialConnectionPrintWriter) throws IOException {
+	private static void createClientSocket(Set<Integer> availablePortNumbers,
+			PrintWriter initialConnectionPrintWriter, String gameName) throws IOException {
 		int availablePort = availablePortNumbers.iterator().next();
 		availablePortNumbers.remove(availablePort);
 		System.out.println("Telling player to connect on port " + availablePort);
@@ -155,20 +152,12 @@ public class CoupServer {
 		ServerSocket serverSocket = new ServerSocket(availablePort);
 		Socket clientSocket = serverSocket.accept();
 		System.out.println("Established connection with player at port " + availablePort);
-		return clientSocket;
-	}
-
-	private static void startGame(List<PrintWriter> playerWriters, List<BufferedReader> playerInputs)
-			throws IOException {
-		List<String> playerNames = new ArrayList<String>();
-		for(int i = 0; i < playerWriters.size(); i++){
-			playerWriters.get(i).println("Player Name?");
-		}
-		for(int i = 0; i < playerInputs.size(); i++){
-			playerNames.add(playerInputs.get(i).readLine());
-		}
-			
-		playGame(playerWriters, playerInputs, playerNames);
+		PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);
+		gameNameToPrintWriters.get(gameName).add(printWriter);
+		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
+		gameNameToBufferedReaders.get(gameName).add(bufferedReader);
+		printWriter.println("Player Name?");
+		gameNameToPlayerNames.get(gameName).add(bufferedReader.readLine());
 	}
 
 	private static void playGame(List<PrintWriter> playerWriters,

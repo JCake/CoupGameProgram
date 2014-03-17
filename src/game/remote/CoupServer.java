@@ -36,18 +36,27 @@ public class CoupServer {
         
 		int initialConnectionPort = 4444;
 
-        try {
-        	ServerSocket initialConnectionServerSocket = new ServerSocket(initialConnectionPort);
-        	while(true){
-        		System.out.println("Listening for a connecting player");
-	        	handleConnectingPlayers(availablePortNumbers, initialConnectionServerSocket);
-	        	System.out.println("Got a player connected");
-        	}
+		ServerSocket initialConnectionServerSocket = null;
+		try{
+			initialConnectionServerSocket = new ServerSocket(initialConnectionPort);
+		}catch(IOException e){
+			System.out.println("Server could not start up.");
+			e.printStackTrace();
+			System.exit(1);
+		}
+    	while(true){
+    		System.out.println("Listening for a connecting player");
+    		try {
+    			handleConnectingPlayers(availablePortNumbers, initialConnectionServerSocket);
+    		} catch (IOException e) {
+    			System.out.println("Exception caught when trying to listen on port or listening for a connection");
+    			System.out.println(e.getMessage());
+    			System.out.println("Will wait for next connecting user");
+    			//FIXME Need to clean up any connections started in try block
+    		}
+        	System.out.println("Got a player connected");
+    	}
 
-        } catch (IOException e) {
-            System.out.println("Exception caught when trying to listen on port or listening for a connection");
-            System.out.println(e.getMessage());
-        }
 
 	}
 
@@ -149,7 +158,7 @@ public class CoupServer {
 		System.out.println("Telling player to connect on port " + availablePort);
 		initialConnectionPrintWriter.println("PORT:"+availablePort);
 		//Above tells client which port to use now
-		ServerSocket serverSocket = new ServerSocket(availablePort);
+		ServerSocket serverSocket = new ServerSocket(availablePort); //TODO need to end if there's a failure
 		Socket clientSocket = serverSocket.accept();
 		System.out.println("Established connection with player at port " + availablePort);
 		PrintWriter printWriter = new PrintWriter(clientSocket.getOutputStream(), true);

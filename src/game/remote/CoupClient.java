@@ -19,17 +19,23 @@ import javafx.application.Application;
 public class CoupClient {
 
 	public static void main(String[] args){
+		String hostName = "";
+		BufferedReader stdIn =
+				new BufferedReader(new InputStreamReader(System.in));
+		
 		if(args.length < 1){
-			System.out.println("Improper usage.  Must enter arg: [host IP]");
-			System.exit(1);
+			System.out.println("Enter IP address of server.");
+			try {
+				hostName = stdIn.readLine();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}else{
+			hostName = args[0];
 		}
-		
-        BufferedReader stdIn =
-                new BufferedReader(new InputStreamReader(System.in));
-		
-		String hostName = args[0];
 		Socket initialConnectSocket = getSocket(hostName, 4444); //initial connection port number
 		int portNum = -1;
+		String gameNameFromUser;
 		try {
 			System.out.println("Waiting for further input from server");
 			BufferedReader initialInput = new BufferedReader(
@@ -49,11 +55,9 @@ public class CoupClient {
 			}else{
 				System.out.println("No games currently waiting on players.  Enter the name of a new game to start.");
 			}
-			String gameNameFromUser = stdIn.readLine();
+			gameNameFromUser = stdIn.readLine();
 			
 			//TODO receive updates from server every so often?? - more games added?
-			
-			//TODO might assign specific port first?
 			
 			initialOutput.println(gameNameFromUser); //Sending game name back
 			
@@ -66,7 +70,7 @@ public class CoupClient {
 					try{
 						numPlayers = Integer.parseInt(numberFromUser);
 					}catch(NumberFormatException nfe){
-						System.out.println("Not a valid number.  Try again.");
+						System.out.println("Not a valid number of players.  Try again.");
 					}
 				}
 				initialOutput.println(numPlayers);
@@ -74,11 +78,10 @@ public class CoupClient {
 			}
 			
 			portNum = Integer.parseInt(serverResponse.split(":")[1]);
-			System.out.println("Server says to connect on port " + portNum);
 		} catch (IOException e1) {
 			throw new RuntimeException("Could not get connection port from server");
 		}
-		System.out.println("Attempting to connect on port " + portNum);
+		System.out.println("Attempting to connect to game " + gameNameFromUser);
 		Socket coupSocket = getSocket(hostName, portNum);
         try {
         	PrintWriter out = new PrintWriter(coupSocket.getOutputStream(), true);
@@ -89,8 +92,9 @@ public class CoupClient {
             
             String fromUser = stdIn.readLine();
             if (fromUser != null) {
-                System.out.println("Your Response: " + fromUser);
+                System.out.println("Your Display Name: " + fromUser);
                 out.println(fromUser);
+                System.out.println("Game will start when all players have joined.");
             }
             
             startNewGame(out, in);

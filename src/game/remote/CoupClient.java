@@ -20,7 +20,7 @@ public class CoupClient {
 
 	private static BufferedReader initialInput;
 	private static String hostName = "";
-
+	
 	public static void main(String[] args){
 		BufferedReader stdIn =
 				new BufferedReader(new InputStreamReader(System.in));
@@ -38,7 +38,7 @@ public class CoupClient {
 		establishNewConnection(null);
 	}
 
-	public static void establishNewConnection(String defaultName) {
+	public static void establishNewConnection(final String defaultName) {
 		Socket initialConnectSocket = getSocket(hostName , 4444); //initial connection port number
 		try {
 			System.out.println("Waiting for further input from server");

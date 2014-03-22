@@ -54,7 +54,7 @@ public class CoupServer {
     		System.out.println("Listening for a connecting player");
     		try {
     			handleConnectingPlayers(availablePortNumbers, initialConnectionServerSocket);
-    		} catch (IOException e) {
+    		} catch (Exception e) {
     			System.out.println("Exception caught when trying to listen on port or listening for a connection");
     			System.out.println(e.getMessage());
     			System.out.println("Will wait for next connecting user");
@@ -68,7 +68,7 @@ public class CoupServer {
 
 	private static void handleConnectingPlayers(
 			Collection<Integer> availablePortNumbers,
-			ServerSocket initialConnectionServerSocket) throws IOException {
+			ServerSocket initialConnectionServerSocket) throws Exception {
 		
     	Socket initialConnectionClientSocket = initialConnectionServerSocket.accept();
 		

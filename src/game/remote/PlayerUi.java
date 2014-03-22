@@ -97,7 +97,7 @@ public class PlayerUi extends Stage{
 		
 		card2RevealButton = new Button("Reveal Card 2");
 		card2RevealButton.setLayoutY(20+COMP_VERT_SPACE);
-		card2RevealButton.setLayoutX(210);
+		card2RevealButton.setLayoutX(240);
 		card2RevealButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {

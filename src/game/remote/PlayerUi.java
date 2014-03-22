@@ -188,7 +188,7 @@ public class PlayerUi extends Stage{
 		
 		quitButton = new Button("Click to quit");
 		quitButton.setVisible(false);
-		quitButton.setLayoutX(80);
+		quitButton.setLayoutX(100);
 		quitButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {

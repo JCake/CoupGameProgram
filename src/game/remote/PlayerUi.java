@@ -4,6 +4,7 @@ import game.Card;
 import game.Player;
 import game.actions.Action;
 import game.actions.Defense;
+import game.ui.javafx.CommonKnowledgeUI;
 import game.ui.javafx.PlayerWithChoices;
 
 import java.io.BufferedReader;
@@ -18,6 +19,7 @@ import javafx.event.EventHandler;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Color;
@@ -43,13 +45,15 @@ public class PlayerUi extends Stage{
 	private Text infoLabel;
 	private PrintWriter printToServer;
 	private Button quitButton;
+	private CommonKnowledgeUI commonUi;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
-			final PrintWriter printToServer, final BufferedReader inFromServer){
+			final PrintWriter printToServer, final BufferedReader inFromServer, CommonKnowledgeUI commonUi){
 		super();
 		
 		this.player = player;
 		this.printToServer = printToServer;
+		this.commonUi = commonUi;
 		this.setX(0);
 		this.setY(0);
 		
@@ -152,15 +156,20 @@ public class PlayerUi extends Stage{
 		loserText = new Text("YOU LOSE! :(");
 		loserText.setFont(Font.font("Verdana", 20));
 		loserText.setLayoutX(0);
-		loserText.setLayoutY(40);
+		loserText.setLayoutY(45);
 		loserText.setFill(Color.WHITE);
 		loserText.setVisible(false); //hide until end of game
 		pane.getChildren().add(loserText);
 		
+		gameHistoryPane = new ScrollPane();
+		gameHistoryPane.setLayoutX(10);
+		gameHistoryPane.setLayoutY(60);
+		gameHistoryPane.setMinSize(400,400);
+		gameHistoryPane.setVisible(false);
 		gameHistoryText = new Text("Game history will go here");
 		gameHistoryText.setVisible(false);
-		gameHistoryText.setLayoutY(60);
-		pane.getChildren().add(gameHistoryText);
+		gameHistoryPane.setContent(gameHistoryText);
+		pane.getChildren().add(gameHistoryPane);
 		
 		playAgainButton = new Button("Click to play again");
 		playAgainButton.setVisible(false);
@@ -188,7 +197,7 @@ public class PlayerUi extends Stage{
 		
 		quitButton = new Button("Click to quit");
 		quitButton.setVisible(false);
-		quitButton.setLayoutX(100);
+		quitButton.setLayoutX(120);
 		quitButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
@@ -292,7 +301,9 @@ public class PlayerUi extends Stage{
 	
 	private Text winnerText;
 	private Text loserText;
-	private Text gameHistoryText; //TODO make this scrollable
+	
+	private ScrollPane gameHistoryPane;
+	private Text gameHistoryText;
 	
 	private CardChooserUI cardChooserUI;
 	
@@ -431,9 +442,11 @@ public class PlayerUi extends Stage{
 	}
 
 	public void gameOver(String details) {
+		commonUi.hide();
 		details = details.replaceAll(":::", "\r\n");
 		gameHistoryText.setText(details);
 		gameHistoryText.setVisible(true);
+		gameHistoryPane.setVisible(true);
 		playAgainButton.setVisible(true);
 		quitButton.setVisible(true);
 	}

@@ -75,24 +75,31 @@ public class CoupServer {
 		Set<String> currentlyAvailableGames = gameNameToNumberAvailableSeats.keySet();
 		PrintWriter initialConnectionPrintWriter = new PrintWriter(initialConnectionClientSocket.getOutputStream(), true);
 		initialConnectionPrintWriter.println("GameChoices+++"+currentAvailableGamesInfo(currentlyAvailableGames));
-		//TODO list current players and available seats as well? -- have players enter names sooner?
-		//TODO assign specific ports sooner?
 		
 		BufferedReader initialConnectionPrintReader = new BufferedReader(
 				new InputStreamReader(initialConnectionClientSocket.getInputStream()));
-		final String gameName = initialConnectionPrintReader.readLine();
-		if(currentlyAvailableGames.contains(gameName)){
+		String gameNameInfo = initialConnectionPrintReader.readLine();
+		if(currentlyAvailableGames.contains(gameNameInfo)){
 			joinExistingGame(availablePortNumbers,
-					initialConnectionPrintWriter, gameName);
+					initialConnectionPrintWriter, gameNameInfo);
 			
-			if(gameNameToNumberAvailableSeats.get(gameName) == 0){
-				startGame(gameName); //TODO regain ports after games end
+			if(gameNameToNumberAvailableSeats.get(gameNameInfo) == 0){
+				startGame(gameNameInfo); //TODO regain ports after games end
 			}
 			
 			
 		}else{ //Creating new game
+			//First check to see if this was explicitly declared as a "new game" and strip off the "NEW GAME" part as needed:
+			String[] definerAndName = gameNameInfo.split(";;;;;");
+			if(definerAndName.length > 1){ //Specified as a "NEW GAME" explicitly
+				gameNameInfo = definerAndName[1]; //TODO in future, might need to check index 0 to see if its "NEW GAME" or not
+				while(currentlyAvailableGames.contains(gameNameInfo)){
+					gameNameInfo += "I"; //Adding onto end of name to distinguish the games
+				}
+				
+			}
 			createNewGame(availablePortNumbers, initialConnectionPrintWriter,
-					initialConnectionPrintReader, gameName);
+					initialConnectionPrintReader, gameNameInfo);
 		}
 	}
 
@@ -100,7 +107,7 @@ public class CoupServer {
 			Set<String> currentlyAvailableGames) {
 		StringBuilder builder = new StringBuilder();
 		for(String game : currentlyAvailableGames){
-			builder.append("+++").append(game).append(" already has players ").append(gameNameToPlayerNames.get(game)).append(" and needs ").append(gameNameToNumberAvailableSeats.get(game)).append(" more players.");
+			builder.append("+++").append(game).append(";;;;;").append(" already has players ").append(gameNameToPlayerNames.get(game)).append(" and needs ").append(gameNameToNumberAvailableSeats.get(game)).append(" more players.");
 			 
 		}
 		return builder.toString();

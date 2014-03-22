@@ -18,95 +18,76 @@ import javafx.application.Application;
 
 public class CoupClient {
 
+	private static BufferedReader initialInput;
+	private static String hostName = "";
+
 	public static void main(String[] args){
-		String hostName = "";
 		BufferedReader stdIn =
 				new BufferedReader(new InputStreamReader(System.in));
 		
 		if(args.length < 1){
 			System.out.println("Enter IP address of server.");
 			try {
-				hostName = stdIn.readLine();
+				hostName  = stdIn.readLine();
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
 		}else{
-			hostName = args[0];
+			hostName  = args[0];
 		}
-		Socket initialConnectSocket = getSocket(hostName, 4444); //initial connection port number
-		int portNum = -1;
-		String gameNameFromUser;
+		Socket initialConnectSocket = getSocket(hostName , 4444); //initial connection port number
 		try {
 			System.out.println("Waiting for further input from server");
-			BufferedReader initialInput = new BufferedReader(
+			initialInput = new BufferedReader(
 					new InputStreamReader(initialConnectSocket.getInputStream()));
 			PrintWriter initialOutput = new PrintWriter(initialConnectSocket.getOutputStream(), true);
 			String firstReadLine = initialInput.readLine();
 			System.out.println("Received input from server");
 			
 			String[] gameOptionsInfo = firstReadLine.split("\\+\\+\\+\\+\\+\\+"); //First it sends a list of available games.
+			String[] allGames = null;
 			if(gameOptionsInfo.length > 1){
 				System.out.println("Existing games: ");
-				String[] allGames = gameOptionsInfo[1].split("\\+\\+\\+");
-				for(String game : allGames){
-					System.out.println(game);
-				}
-				System.out.println("Choose an existing game above to join, or enter the name of a new game you'd like to start:");
-				//TODO select games in a UI instead of on command line to avoid typos
-			}else{
-				System.out.println("No games currently waiting on players.  Enter the name of a new game to start.");
+				allGames = gameOptionsInfo[1].split("\\+\\+\\+");
 			}
-			gameNameFromUser = stdIn.readLine();
-			
-			initialOutput.println(gameNameFromUser); //Sending game name back
-			
-			String serverResponse = initialInput.readLine();
-			if(serverResponse.startsWith("NewGame")){ //User is starting a new game
-				int numPlayers = -1;
-				while(numPlayers < 2 || numPlayers > 6){
-					System.out.println("Enter number of players to play this game (2-6):");
-					String numberFromUser = stdIn.readLine();
-					try{
-						numPlayers = Integer.parseInt(numberFromUser);
-					}catch(NumberFormatException nfe){
-						System.out.println("Not a valid number of players.  Try again.");
-					}
-				}
-				initialOutput.println(numPlayers);
-				serverResponse = initialInput.readLine();
-			}
-			
-			portNum = Integer.parseInt(serverResponse.split(":")[1]);
+			CoupApplicationClientSide.gameOptions = allGames;
+			CoupApplicationClientSide.initialOutput = initialOutput;
+			CoupApplicationClientSide.initialInput = initialInput;
+			Application.launch(CoupApplicationClientSide.class);
 		} catch (IOException e1) {
 			throw new RuntimeException("Could not get connection port from server");
 		}
-		System.out.println("Attempting to connect to game " + gameNameFromUser);
+	}
+	
+	public static void startUp(String gameName, String userName){
+		int portNum = -1;
+		try {
+			String serverResponse = initialInput.readLine();
+			portNum = Integer.parseInt(serverResponse.split(":")[1]);
+		} catch (IOException e1) {
+			throw new RuntimeException(
+					"Could not get connection port from server");
+		}
 		Socket coupSocket = getSocket(hostName, portNum);
-        try {
-        	PrintWriter out = new PrintWriter(coupSocket.getOutputStream(), true);
-        	BufferedReader in = new BufferedReader(
-        			new InputStreamReader(coupSocket.getInputStream()));
+		try {
+			PrintWriter out = new PrintWriter(coupSocket.getOutputStream(),true);
+			BufferedReader in = new BufferedReader(new InputStreamReader(
+					coupSocket.getInputStream()));
 
-            System.out.println(in.readLine());
-            
-            String fromUser = stdIn.readLine();
-            if (fromUser != null) {
-                System.out.println("Your Display Name: " + fromUser);
-                out.println(fromUser);
-                System.out.println("Game will start when all players have joined.");
-            }
-            
-            startNewGame(out, in);
-            Application.launch(CoupApplicationClientSide.class);
-       } catch (IOException e) {
-        	e.printStackTrace();
-        	System.exit(1);
-      }
-            
-            
+			in.readLine();
+			out.println(userName);
+			System.out.println("Joining game " + gameName + " with user name " + userName);
+			System.out.println("Game will start when all players have joined.");
+
+			CoupClient.startNewGame(out, in);
+			CoupApplicationClientSide.startNewGame();
+		} catch (IOException e) {
+			System.out.println("ERROR!");
+			e.printStackTrace();
+		}
 	}
 
-	private static Socket getSocket(String hostName, int portNumber) {
+	public static Socket getSocket(String hostName, int portNumber) {
 		Socket coupSocket = null;
         try {
         	coupSocket = new Socket(hostName, portNumber);

@@ -27,22 +27,25 @@ public class CoupApplicationClientSide extends Application {
 	public static PrintWriter out;
 	public static BufferedReader in;
 	
+	public static String[] gameOptions; //TODO encapsulate better
 	private static PlayerUi playerUi;
 	private static CommonKnowledgeUI commonUi;
 	
 	private static ExecutorService waitingTaskProcessor = Executors.newFixedThreadPool(1);
+	public static PrintWriter initialOutput;
+	public static BufferedReader initialInput;
 
 	public CoupApplicationClientSide(){
 	}
 
 	@Override
 	public void start(Stage arg0) throws Exception {
-		startNewGame();
+		new GameSelectionUI(gameOptions, initialOutput, initialInput);
 	}
 
 	public static void startNewGame() {
-		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in);
 		commonUi = new CommonKnowledgeUI(allPlayers);
+		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in,commonUi);
 		
 		CoupApplicationClientSide.processNextServerMessage(); //Wait for next command
 	}
@@ -123,7 +126,7 @@ public class CoupApplicationClientSide extends Application {
 					}
 					else if(action.equals(Commands.UpdateCoins.toString())){
 						String[] newCoinValues = details.split(":");
-						for(int i = 0; i < allPlayers.size(); i++){ //FIXME was 'allPlayers' before
+						for(int i = 0; i < allPlayers.size(); i++){
 							allPlayers.get(i).setCoins(Integer.parseInt(newCoinValues[i]));
 						}
 						playerUi.updateMoneyLabelText();

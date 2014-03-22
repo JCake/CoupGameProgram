@@ -11,8 +11,8 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javafx.application.Application;
 
@@ -126,7 +126,7 @@ public class CoupClient {
 			throws IOException {
 		String[] playerData = in.readLine().split(":");
 		int numberPlayers = (playerData.length-1)/3;
-		Map<String,Player> allPlayers = new HashMap<String,Player>();
+		Map<String,Player> allPlayers = new ConcurrentHashMap<String,Player>();
 		int thisPlayerIndex = Integer.parseInt(playerData[playerData.length - 1]);
 		for(int i = 0; i < numberPlayers; i++){
 			String playerName = playerData[3*i];

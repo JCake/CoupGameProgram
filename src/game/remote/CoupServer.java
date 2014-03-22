@@ -30,7 +30,7 @@ public class CoupServer {
 	private static List<Integer> availablePortNumbers = new CopyOnWriteArrayList<Integer>();
 	static{
 	    int firstPort = 4445;
-	    for(int i = 0; i < 10; i++){
+	    for(int i = 0; i < 12; i++){
 	    	availablePortNumbers.add(firstPort + i);
 	    }
 	}
@@ -56,7 +56,7 @@ public class CoupServer {
     			handleConnectingPlayers(availablePortNumbers, initialConnectionServerSocket);
     		} catch (Exception e) {
     			System.out.println("Exception caught when trying to listen on port or listening for a connection");
-    			System.out.println(e.getMessage());
+    			e.printStackTrace();
     			System.out.println("Will wait for next connecting user");
     			//FIXME Need to clean up any connections started in try block
     		}
@@ -84,7 +84,7 @@ public class CoupServer {
 					initialConnectionPrintWriter, gameNameInfo);
 			
 			if(gameNameToNumberAvailableSeats.get(gameNameInfo) == 0){
-				startGame(gameNameInfo); //TODO regain ports after games end
+				startGame(gameNameInfo);
 			}
 			
 			
@@ -193,6 +193,31 @@ public class CoupServer {
 			List<BufferedReader> playerInputs, List<String> playerNames,
 			List<ServerSocket> gameSockets)
 			throws IOException {
+		Map<String,Integer> nameToCountOfName = new HashMap<String,Integer>();
+		for(String name : playerNames){
+			if(nameToCountOfName.containsKey(name)){
+				if(nameToCountOfName.get(name) == 0){
+					nameToCountOfName.put(name, 2); //Now there are two - name is duplicated
+				}else{
+					nameToCountOfName.put(name, nameToCountOfName.get(name) + 1);
+				}
+			}
+			else{
+				nameToCountOfName.put(name, 0); //zero means 1 but no duplicates
+			}
+		}
+		
+		List<String> indexedPlayerNames = new ArrayList<String>();
+		for(int i = 0; i < playerNames.size(); i++){
+			String indexedName = playerNames.get(i);
+			int index = nameToCountOfName.get(playerNames.get(i));
+			if(index > 0){
+				indexedName += " " + index;
+				nameToCountOfName.put(playerNames.get(i), nameToCountOfName.get(playerNames.get(i)) - 1);
+			}
+			indexedPlayerNames.add(indexedName );
+		}
+		
 		List<PrintWriter> originalPlayerWriters = new ArrayList<PrintWriter>(playerWriters);
 		List<BufferedReader> originalPlayerInputs = new ArrayList<BufferedReader>(playerInputs);
 		List<String> originalPlayerNames = new ArrayList<String>(playerNames);

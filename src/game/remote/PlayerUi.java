@@ -42,6 +42,7 @@ public class PlayerUi extends Stage{
 	private Color color;
 	private Text infoLabel;
 	private PrintWriter printToServer;
+	private Button quitButton;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
 			final PrintWriter printToServer, final BufferedReader inFromServer){
@@ -173,6 +174,8 @@ public class PlayerUi extends Stage{
 					if(ready.equals(Responses.READY.toString())){
 						CoupClient.startNewGame(printToServer, inFromServer);
 						CoupApplicationClientSide.startNewGame();
+					}else if(ready.equals(Responses.NOT_READY.toString())){
+						updateToDisplayGameDone();
 					}else{
 						throw new RuntimeException("Invalid server response: " + ready);
 					}
@@ -182,6 +185,18 @@ public class PlayerUi extends Stage{
 			}
 		});
 		pane.getChildren().add(playAgainButton);
+		
+		quitButton = new Button("Click to quit");
+		quitButton.setVisible(false);
+		quitButton.setLayoutX(80);
+		quitButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				printToServer.println(Responses.QUIT);
+				System.exit(1);
+			}
+		});
+		pane.getChildren().add(quitButton);
 		
 		
 		cardChooserUI = new CardChooserUI(color, printToServer, pane);
@@ -420,6 +435,16 @@ public class PlayerUi extends Stage{
 		gameHistoryText.setText(details);
 		gameHistoryText.setVisible(true);
 		playAgainButton.setVisible(true);
+		quitButton.setVisible(true);
+	}
+
+	public void updateToDisplayGameDone() {
+		playAgainButton.setVisible(false);
+		quitButton.setVisible(false);
+		gameHistoryText.setText(
+				 "Not all players want to keep playing. "
+							+ "\r\n Game is terminated.  \r\nPlease connect to the server again to start a new game\r\n\r\n\r\n" +
+				gameHistoryText.getText()); //TODO go back to game selection screen
 	}
 
 

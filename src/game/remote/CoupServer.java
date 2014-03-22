@@ -10,11 +10,12 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -24,15 +25,20 @@ public class CoupServer {
 	private static Map<String,List<String>> gameNameToPlayerNames = new HashMap<String,List<String>>();
 	private static Map<String,List<PrintWriter>> gameNameToPrintWriters = new HashMap<String,List<PrintWriter>>();
 	private static Map<String,List<BufferedReader>> gameNameToBufferedReaders = new HashMap<String,List<BufferedReader>>();
+	private static Map<String,List<ServerSocket>> gameNameToSockets = new HashMap<String,List<ServerSocket>>();
+	
+	private static List<Integer> availablePortNumbers = new CopyOnWriteArrayList<Integer>();
+	static{
+	    int firstPort = 4445;
+	    for(int i = 0; i < 10; i++){
+	    	availablePortNumbers.add(firstPort + i);
+	    }
+	}
 	
 	private static ExecutorService gameThreads = Executors.newCachedThreadPool();
 	
 	public static void main(String[] args){
-        Set<Integer> availablePortNumbers = new HashSet<Integer>();
-        int firstPort = 4445;
-        for(int i = 0; i < 10; i++){
-        	availablePortNumbers.add(firstPort + i);
-        }
+        
         
 		int initialConnectionPort = 4444;
 
@@ -61,7 +67,7 @@ public class CoupServer {
 	}
 
 	private static void handleConnectingPlayers(
-			Set<Integer> availablePortNumbers,
+			Collection<Integer> availablePortNumbers,
 			ServerSocket initialConnectionServerSocket) throws IOException {
 		
     	Socket initialConnectionClientSocket = initialConnectionServerSocket.accept();
@@ -100,7 +106,7 @@ public class CoupServer {
 		return builder.toString();
 	}
 
-	private static void createNewGame(Set<Integer> availablePortNumbers,
+	private static void createNewGame(Collection<Integer> availablePortNumbers,
 			PrintWriter initialConnectionPrintWriter,
 			BufferedReader initialConnectionPrintReader, final String gameName)
 			throws IOException {
@@ -112,9 +118,11 @@ public class CoupServer {
 		gameNameToPrintWriters.put(gameName, new ArrayList<PrintWriter>());
 		gameNameToBufferedReaders.put(gameName, new ArrayList<BufferedReader>());
 		gameNameToPlayerNames.put(gameName, new ArrayList<String>());
+		gameNameToSockets.put(gameName, new ArrayList<ServerSocket>());
 		
 		System.out.println("Sending connection info to client");
-		createClientSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
+		ServerSocket socket = createSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
+		gameNameToSockets.get(gameName).add(socket);
 
 	}
 
@@ -123,15 +131,17 @@ public class CoupServer {
 		final List<PrintWriter> printWriters = gameNameToPrintWriters.get(gameName);
 		final List<BufferedReader> bufferedReaders = gameNameToBufferedReaders.get(gameName);
 		final List<String> playerNames = gameNameToPlayerNames.get(gameName);
+		final List<ServerSocket> gameSockets = gameNameToSockets.get(gameName);
 		
 		gameThreads.execute(new Runnable(){
 
 			@Override
 			public void run() {
 				try {
-					playGame(printWriters, bufferedReaders, playerNames);
+					playGame(printWriters, bufferedReaders, playerNames, gameSockets);
 				} catch (IOException e) {
 					e.printStackTrace();
+					terminateGame(printWriters, gameSockets);
 				}
 			}
 			
@@ -140,18 +150,20 @@ public class CoupServer {
 		gameNameToBufferedReaders.remove(gameName);
 		gameNameToNumberAvailableSeats.remove(gameName);
 		gameNameToPrintWriters.remove(gameName);
+		gameNameToSockets.remove(gameName);
 	}
 
-	private static void joinExistingGame(Set<Integer> availablePortNumbers,
+	private static void joinExistingGame(Collection<Integer> availablePortNumbers,
 			PrintWriter initialConnectionPrintWriter, final String gameName)
 			throws IOException {
 		gameNameToNumberAvailableSeats.put(gameName, gameNameToNumberAvailableSeats.get(gameName) - 1);
 		
 		//Assign port
-		createClientSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
+		ServerSocket serverSocket = createSocket(availablePortNumbers, initialConnectionPrintWriter, gameName);
+		gameNameToSockets.get(gameName).add(serverSocket);
 	}
 
-	private static void createClientSocket(Set<Integer> availablePortNumbers,
+	private static ServerSocket createSocket(Collection<Integer> availablePortNumbers,
 			PrintWriter initialConnectionPrintWriter, String gameName) throws IOException {
 		int availablePort = availablePortNumbers.iterator().next();
 		availablePortNumbers.remove(availablePort);
@@ -167,10 +179,12 @@ public class CoupServer {
 		gameNameToBufferedReaders.get(gameName).add(bufferedReader);
 		printWriter.println("Player Name?");
 		gameNameToPlayerNames.get(gameName).add(bufferedReader.readLine());
+		return serverSocket;
 	}
 
 	private static void playGame(List<PrintWriter> playerWriters,
-			List<BufferedReader> playerInputs, List<String> playerNames)
+			List<BufferedReader> playerInputs, List<String> playerNames,
+			List<ServerSocket> gameSockets)
 			throws IOException {
 		List<PrintWriter> originalPlayerWriters = new ArrayList<PrintWriter>(playerWriters);
 		List<BufferedReader> originalPlayerInputs = new ArrayList<BufferedReader>(playerInputs);
@@ -203,7 +217,9 @@ public class CoupServer {
 		for(int i = 0; i < originalPlayerInputs.size(); i++){
 			String playAgain = originalPlayerInputs.get(i).readLine();
 			if(!playAgain.equalsIgnoreCase(Responses.RESTART.toString())){
-				throw new RuntimeException("Player responded invalidly about wanting to play again: " + playAgain);
+				System.out.println("Not all players want to play again.  Terminating and making players start a new game.");
+				terminateGame(originalPlayerWriters, gameSockets);
+				return; //Done playing this game
 			}
 		}
 		
@@ -211,7 +227,24 @@ public class CoupServer {
 			originalPlayerWriters.get(i).println(Responses.READY.toString());//get everyone ready
 		}
 		//If everyone agrees, then play again!
-		playGame(originalPlayerWriters, originalPlayerInputs, originalPlayerNames);
+		playGame(originalPlayerWriters, originalPlayerInputs, originalPlayerNames, gameSockets);
+	}
+
+	private static void terminateGame(List<PrintWriter> originalPlayerWriters, List<ServerSocket> socketsToClose) {
+		for(int i = 0; i < originalPlayerWriters.size(); i++){
+			originalPlayerWriters.get(i).println(Responses.NOT_READY.toString());
+		}
+		for(ServerSocket socket : socketsToClose){
+			int portOpeningUp = socket.getLocalPort();
+			try {
+				socket.close();
+				availablePortNumbers.add(portOpeningUp);
+			} catch (IOException e) {
+				e.printStackTrace();
+				System.err.println("Could not reclaim port " + portOpeningUp);
+			}
+			
+		}
 	}
 
 

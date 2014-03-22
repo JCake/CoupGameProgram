@@ -76,7 +76,10 @@ public class CoupApplicationClientSide extends Application {
 					playerUi.updateToDisplayerDefeat();
 				}else if(nextAction.equals(Commands.VICTORY.toString())){
 					playerUi.updateToDisplayerVictory();
-				}else{
+				}else if(nextAction.equals(Responses.NOT_READY.toString())){
+					playerUi.updateToDisplayGameDone();
+				}
+				else{
 					/*
 					 * Commands.Block + "+++" + 
 							players.get(playerNum) + "++" + action + "++" + 

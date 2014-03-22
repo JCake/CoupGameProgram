@@ -52,12 +52,11 @@ public class CoupClient {
 					System.out.println(game);
 				}
 				System.out.println("Choose an existing game above to join, or enter the name of a new game you'd like to start:");
+				//TODO select games in a UI instead of on command line to avoid typos
 			}else{
 				System.out.println("No games currently waiting on players.  Enter the name of a new game to start.");
 			}
 			gameNameFromUser = stdIn.readLine();
-			
-			//TODO receive updates from server every so often?? - more games added?
 			
 			initialOutput.println(gameNameFromUser); //Sending game name back
 			

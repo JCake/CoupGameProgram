@@ -38,9 +38,12 @@ public class CoupApplicationClientSide extends Application {
 	public CoupApplicationClientSide(){
 	}
 
+	private static boolean launched = false;
+	
 	@Override
 	public void start(Stage arg0) throws Exception {
-		new GameSelectionUI(gameOptions, initialOutput, initialInput);
+		showGameSelectionScreen(null);
+		launched = true;
 	}
 
 	public static void startNewGame() {
@@ -171,6 +174,21 @@ public class CoupApplicationClientSide extends Application {
 				return newCard;
 			}
 		});
+	}
+
+	public static void showGameSelectionScreen(String defaultName) {
+		// FIXME there is a memory leak with creating a new UI each time - need to figure out what to do with old UIs
+		new GameSelectionUI(gameOptions, initialOutput, initialInput, defaultName);
+		if(commonUi != null){
+			commonUi.hide();
+		}
+		if(playerUi != null){
+			playerUi.hide();
+		}
+	}
+
+	public static boolean launched() {
+		return launched;
 	}
 
 }

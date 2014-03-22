@@ -221,5 +221,19 @@ public class Game {
 		this.bluffCallerOption = bluffCallerOption;
 	}
 
+	public Player getWinner() {
+		Player possibleWinner = null;
+		for(Player player : players){
+			if(!player.eliminated()){ //Still in game
+				if(possibleWinner != null){ //Another player was already found not eliminated
+					return null; //No single winner
+				}else{
+					possibleWinner = player; //This player could be the winner
+				}
+			}
+		}
+		return possibleWinner;
+	}
+
 
 }

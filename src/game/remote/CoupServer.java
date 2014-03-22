@@ -196,21 +196,22 @@ public class CoupServer {
 		List<PrintWriter> originalPlayerWriters = new ArrayList<PrintWriter>(playerWriters);
 		List<BufferedReader> originalPlayerInputs = new ArrayList<BufferedReader>(playerInputs);
 		List<String> originalPlayerNames = new ArrayList<String>(playerNames);
-		
+		Map<String, BufferedReader> nameToReader = new HashMap<String, BufferedReader>();
 		List<Player> players = new ArrayList<Player>();
 		for(int i = 0; i < playerNames.size(); i++){
 			final String playerName = playerNames.get(i);
 			final PrintWriter writeToPlayer = playerWriters.get(i);
 			final BufferedReader readFromPlayer = playerInputs.get(i);
+			nameToReader.put(playerName, readFromPlayer);
 			players.add(new RemotePlayer(playerName,writeToPlayer,readFromPlayer));
 		}
 		Game g = new Game(players);
 		g.deal();
 		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters,playerInputs);
 		
-		int nextPlayer = gameController.advanceToNextPlayer();
-		while(nextPlayer != -1){
-			String playerAction = playerInputs.get(nextPlayer).readLine();
+		Player nextPlayer = gameController.advanceToNextPlayer();
+		while(nextPlayer != null){
+			String playerAction = nameToReader.get(nextPlayer.toString()).readLine();
 			gameController.attemptToPerformAction(nextPlayer,playerAction);
 			nextPlayer = gameController.advanceToNextPlayer();
 		}

@@ -35,6 +35,10 @@ public class CoupClient {
 		}else{
 			hostName  = args[0];
 		}
+		establishNewConnection(null);
+	}
+
+	public static void establishNewConnection(String defaultName) {
 		Socket initialConnectSocket = getSocket(hostName , 4444); //initial connection port number
 		try {
 			System.out.println("Waiting for further input from server");
@@ -53,7 +57,11 @@ public class CoupClient {
 			CoupApplicationClientSide.gameOptions = allGames;
 			CoupApplicationClientSide.initialOutput = initialOutput;
 			CoupApplicationClientSide.initialInput = initialInput;
-			Application.launch(CoupApplicationClientSide.class);
+			if(CoupApplicationClientSide.launched()){
+				CoupApplicationClientSide.showGameSelectionScreen(defaultName);
+			}else{
+				Application.launch(CoupApplicationClientSide.class);
+			}
 		} catch (IOException e1) {
 			throw new RuntimeException("Could not get connection port from server");
 		}

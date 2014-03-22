@@ -46,6 +46,7 @@ public class PlayerUi extends Stage{
 	private PrintWriter printToServer;
 	private Button quitButton;
 	private CommonKnowledgeUI commonUi;
+	private Text cannotPlayAgainText;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
 			final PrintWriter printToServer, final BufferedReader inFromServer, CommonKnowledgeUI commonUi){
@@ -171,7 +172,12 @@ public class PlayerUi extends Stage{
 		gameHistoryPane.setContent(gameHistoryText);
 		pane.getChildren().add(gameHistoryPane);
 		
-		playAgainButton = new Button("Click to play again");
+		cannotPlayAgainText = new Text("Other players want to stop, choose:");
+		cannotPlayAgainText.setLayoutY(15);
+		cannotPlayAgainText.setVisible(false);
+		pane.getChildren().add(cannotPlayAgainText);
+		
+		playAgainButton = new Button("Play again with same players");
 		playAgainButton.setVisible(false);
 		playAgainButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
@@ -195,9 +201,9 @@ public class PlayerUi extends Stage{
 		});
 		pane.getChildren().add(playAgainButton);
 		
-		quitButton = new Button("Click to quit");
+		quitButton = new Button("Quit");
 		quitButton.setVisible(false);
-		quitButton.setLayoutX(120);
+		quitButton.setLayoutX(180);
 		quitButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
@@ -206,6 +212,18 @@ public class PlayerUi extends Stage{
 			}
 		});
 		pane.getChildren().add(quitButton);
+		
+		findNewGameButton = new Button("Find a new game");
+		findNewGameButton.setVisible(false);
+		findNewGameButton.setLayoutX(250);
+		findNewGameButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				printToServer.println(Responses.QUIT);
+				CoupClient.establishNewConnection(player.toString());
+			}
+		});
+		pane.getChildren().add(findNewGameButton);
 		
 		
 		cardChooserUI = new CardChooserUI(color, printToServer, pane);
@@ -381,6 +399,7 @@ public class PlayerUi extends Stage{
 	
 	List<String> currentDefenseOptions;
 	private Button playAgainButton;
+	private Button findNewGameButton;
 
 	protected String getChosenDefense(int i) {
 		return currentDefenseOptions.get(i);
@@ -442,22 +461,22 @@ public class PlayerUi extends Stage{
 	}
 
 	public void gameOver(String details) {
-		commonUi.hide();
 		details = details.replaceAll(":::", "\r\n");
 		gameHistoryText.setText(details);
 		gameHistoryText.setVisible(true);
 		gameHistoryPane.setVisible(true);
 		playAgainButton.setVisible(true);
 		quitButton.setVisible(true);
+		findNewGameButton.setVisible(true);
 	}
 
 	public void updateToDisplayGameDone() {
 		playAgainButton.setVisible(false);
-		quitButton.setVisible(false);
-		gameHistoryText.setText(
-				 "Not all players want to keep playing. "
-							+ "\r\n Game is terminated.  \r\nPlease connect to the server again to start a new game\r\n\r\n\r\n" +
-				gameHistoryText.getText()); //TODO go back to game selection screen
+		cannotPlayAgainText.setVisible(true);
+		quitButton.setVisible(true);
+		findNewGameButton.setVisible(true);
+		
+		gameHistoryText.setText(gameHistoryText.getText());
 	}
 
 

@@ -22,7 +22,7 @@ public class GameSelectionUI extends Stage {
 	private static final int xPadding = 15;
 	private TextField nameField;
 
-	public GameSelectionUI(String[] allGameOptions, final PrintWriter initialOutput, final BufferedReader initialInput){
+	public GameSelectionUI(String[] allGameOptions, final PrintWriter initialOutput, final BufferedReader initialInput, String defaultName){
 		super();
 		AnchorPane root = new AnchorPane();
 		pane = new Pane();
@@ -35,6 +35,9 @@ public class GameSelectionUI extends Stage {
 		pane.getChildren().add(name);
 		
 		nameField = new TextField();
+		if(defaultName != null){
+			nameField.setText(defaultName);
+		}
 		nameField.setLayoutX(200);
 		nameField.setLayoutY(currentY - 15);
 		pane.getChildren().add(nameField);

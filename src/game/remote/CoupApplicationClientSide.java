@@ -8,10 +8,10 @@ import game.ui.javafx.CommonKnowledgeUI;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -21,7 +21,7 @@ import javafx.stage.Stage;
 
 public class CoupApplicationClientSide extends Application {
 	
-	public static List<Player> allPlayers;
+	public static Map<String, Player> allPlayers;
 	public static Player playerForUi;
 	public static List<String> buttonLabels;
 	public static PrintWriter out;
@@ -47,8 +47,8 @@ public class CoupApplicationClientSide extends Application {
 	}
 
 	public static void startNewGame() {
-		commonUi = new CommonKnowledgeUI(allPlayers);
-		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in,commonUi);
+		commonUi = new CommonKnowledgeUI(allPlayers.values());
+		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in);
 		
 		CoupApplicationClientSide.processNextServerMessage(); //Wait for next command
 	}
@@ -60,12 +60,11 @@ public class CoupApplicationClientSide extends Application {
 				String nextAction;
 				try {
 					nextAction = in.readLine();
-					System.out.println(nextAction);
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
 				if(!nextAction.startsWith("Update")){
-					System.out.println("NEXT ACTION: " + nextAction);
+					System.out.println("NEXT non-update ACTION: " + nextAction);
 				}
 				if(nextAction.startsWith(Commands.ActionsDisable.toString())){
 					playerUi.disableAllActions();
@@ -94,7 +93,6 @@ public class CoupApplicationClientSide extends Application {
 					String[] actionAndDetails = nextAction.split("\\+\\+\\+");
 					String action = actionAndDetails[0];
 					String details = actionAndDetails[1];
-					System.out.println(details);
 					if(action.equals(Commands.GAME_OVER.toString())){
 						playerUi.gameOver(details);
 					}
@@ -129,8 +127,9 @@ public class CoupApplicationClientSide extends Application {
 					}
 					else if(action.equals(Commands.UpdateCoins.toString())){
 						String[] newCoinValues = details.split(":");
-						for(int i = 0; i < allPlayers.size(); i++){
-							allPlayers.get(i).setCoins(Integer.parseInt(newCoinValues[i]));
+						for(int i = 0; i < allPlayers.size(); i++){ //Last spot is just blank
+							String[] nameAndValue = newCoinValues[i].split("\\+\\+");
+							allPlayers.get(nameAndValue[0]).setCoins(Integer.parseInt(nameAndValue[1]));
 						}
 						playerUi.updateMoneyLabelText();
 						commonUi.refresh();
@@ -141,11 +140,12 @@ public class CoupApplicationClientSide extends Application {
 						String[] cardDetailsPerPlayer = details.split("\\+\\+");
 						for(int i = 0; i < allPlayers.size(); i++){
 							String[] cardDetailsPerCard = cardDetailsPerPlayer[i].split("::");
-							String[] firstCardDetails = cardDetailsPerCard[0].split(":");
-							String[] secondCardDetails = cardDetailsPerCard[1].split(":");
+							String playerName = cardDetailsPerCard[0];
+							String[] firstCardDetails = cardDetailsPerCard[1].split(":");
+							String[] secondCardDetails = cardDetailsPerCard[2].split(":");
 							
-							allPlayers.get(i).replaceFirstCard(buildNewCard(firstCardDetails));
-							allPlayers.get(i).replaceSecondCard(buildNewCard(secondCardDetails));
+							allPlayers.get(playerName).replaceFirstCard(buildNewCard(firstCardDetails));
+							allPlayers.get(playerName).replaceSecondCard(buildNewCard(secondCardDetails));
 						}
 						playerUi.updateCardLabels();
 						commonUi.refresh();
@@ -157,13 +157,11 @@ public class CoupApplicationClientSide extends Application {
 			}
 
 			private void removeEliminatedPlayers() {
-				List<Player> playersToRemove = new ArrayList<Player>();
-				for(Player player : allPlayers){
+				for(Player player : allPlayers.values()){
 					if(player.eliminated()){
-						playersToRemove.add(player);
+						allPlayers.remove(player.toString());
 					}
 				}
-				allPlayers.removeAll(playersToRemove);
 			}
 
 			private Card buildNewCard(String[] cardDetails) {

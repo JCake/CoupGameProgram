@@ -4,7 +4,6 @@ import game.Card;
 import game.Player;
 import game.actions.Action;
 import game.actions.Defense;
-import game.ui.javafx.CommonKnowledgeUI;
 import game.ui.javafx.PlayerWithChoices;
 
 import java.io.BufferedReader;
@@ -45,16 +44,14 @@ public class PlayerUi extends Stage{
 	private Text infoLabel;
 	private PrintWriter printToServer;
 	private Button quitButton;
-	private CommonKnowledgeUI commonUi;
 	private Text cannotPlayAgainText;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
-			final PrintWriter printToServer, final BufferedReader inFromServer, CommonKnowledgeUI commonUi){
+			final PrintWriter printToServer, final BufferedReader inFromServer){
 		super();
 		
 		this.player = player;
 		this.printToServer = printToServer;
-		this.commonUi = commonUi;
 		this.setX(0);
 		this.setY(0);
 		
@@ -80,8 +77,8 @@ public class PlayerUi extends Stage{
 		
 		card1RevealButton = new Button("Reveal Card 1");
 		card1RevealButton.setVisible(false);
-		card1RevealButton.setLayoutY(20+0);
-		card1RevealButton.setLayoutX(210);
+		card1RevealButton.setLayoutY(20);
+		card1RevealButton.setLayoutX(240);
 		card1RevealButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
@@ -172,7 +169,7 @@ public class PlayerUi extends Stage{
 		gameHistoryPane.setContent(gameHistoryText);
 		pane.getChildren().add(gameHistoryPane);
 		
-		cannotPlayAgainText = new Text("Other players want to stop, choose:");
+		cannotPlayAgainText = new Text("Other players declined, choose: ");
 		cannotPlayAgainText.setLayoutY(15);
 		cannotPlayAgainText.setVisible(false);
 		pane.getChildren().add(cannotPlayAgainText);
@@ -215,7 +212,7 @@ public class PlayerUi extends Stage{
 		
 		findNewGameButton = new Button("Find a new game");
 		findNewGameButton.setVisible(false);
-		findNewGameButton.setLayoutX(250);
+		findNewGameButton.setLayoutX(260);
 		findNewGameButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {

@@ -10,9 +10,9 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
 
 import javafx.application.Application;
 
@@ -126,7 +126,8 @@ public class CoupClient {
 			throws IOException {
 		String[] playerData = in.readLine().split(":");
 		int numberPlayers = (playerData.length-1)/3;
-		List<Player> allPlayers = new ArrayList<Player>();
+		Map<String,Player> allPlayers = new HashMap<String,Player>();
+		int thisPlayerIndex = Integer.parseInt(playerData[playerData.length - 1]);
 		for(int i = 0; i < numberPlayers; i++){
 			String playerName = playerData[3*i];
 			Card firstCard = new Card(CardType.valueOf(playerData[3*i+1]));
@@ -134,14 +135,15 @@ public class CoupClient {
 			Player player = new Player(playerName);
 			player.receive(firstCard);
 			player.receive(secondCard);
-			allPlayers.add(player);
+			allPlayers.put(player.toString(),player);
+			if(i == thisPlayerIndex){
+				CoupApplicationClientSide.playerForUi = player;
+			}
 		}
-		int thisPlayerIndex = Integer.parseInt(playerData[playerData.length - 1]);
 		
 		
 		String[] buttonLabels = in.readLine().split("\\+\\+");
 		
-		CoupApplicationClientSide.playerForUi = allPlayers.get(thisPlayerIndex);
 		CoupApplicationClientSide.allPlayers = allPlayers;
 		CoupApplicationClientSide.buttonLabels = Arrays.asList(buttonLabels);
 		CoupApplicationClientSide.out = out;

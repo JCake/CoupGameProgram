@@ -3,6 +3,7 @@ package game.ui.javafx;
 import game.Player;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import javafx.scene.Scene;
@@ -17,7 +18,7 @@ public class CommonKnowledgeUI extends Stage {
 	
 	private int ySpacing = 150;
 	
-	public CommonKnowledgeUI(List<Player> allPlayers){
+	public CommonKnowledgeUI(Collection<Player> allPlayers){
 		
 		AnchorPane root = new AnchorPane();
 		

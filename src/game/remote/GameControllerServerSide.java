@@ -18,6 +18,7 @@ import java.util.Map.Entry;
 
 //TODO Ideas for expansion/improvement:
 //View most recent action in common UI
+//FIXME Need to get "YOU LOSE" to display again
 public class GameControllerServerSide {
 	
 	private final Game game;
@@ -28,7 +29,6 @@ public class GameControllerServerSide {
     private final Map<String, PrintWriter> nameToOutWriter = new HashMap<String, PrintWriter>();
     private final HashMap<String, BufferedReader> nameToPlayerInput = new HashMap<String, BufferedReader>();
     
-//    private int curPlayer = -1;
     private Player nextPlayer = null;
     public static String gameHistory = "";
     
@@ -57,7 +57,7 @@ public class GameControllerServerSide {
 			nameToOutWriter.put(player.toString(), outWriters.get(i));
 			nameToPlayerInput.put(player.toString(), playerInputs.get(i));
 			
-			RemoteCardChooser remoteCardChooser = new RemoteCardChooser(players,outWriters,playerInputs);
+			RemoteCardChooser remoteCardChooser = new RemoteCardChooser(nameToOutWriter,nameToPlayerInput);
 			ActionList playerActions = new ActionList(g,player,remoteCardChooser);
 			Map<String,Action> actionStringToAction = new HashMap<String,Action>();
 			String allActionStrings = "";
@@ -101,7 +101,7 @@ public class GameControllerServerSide {
 									actingPlayer.takeActionAssassin();  //TODO still pay if attempting assassination??
 								}
 								actingPlayer.revealACard(bluffCaller + " called your bluff about having " + cardTypeRequired);
-								gameHistory += bluffCaller + " correctly accussed " + actingPlayer + " of bluffing, thus ending this turn.::::::";
+								gameHistory += bluffCaller + " correctly accussed " + actingPlayer + " of bluffing, thus ending the turn.::::::";
 							}
 							return;
 						}
@@ -153,8 +153,7 @@ public class GameControllerServerSide {
 			String[] actionPackageStruct = action.getClass().getName().split("\\.");
 			String actionStr = actionPackageStruct[actionPackageStruct.length - 1];
 			for(Player defendingPlayer : targetedPlayers){
-				int targetedPlayerIndex = players.indexOf(defendingPlayer);
-				if(targetedPlayerIndex != -1){
+				if(players.contains(defendingPlayer)){
 					nameToOutWriter.get(defendingPlayer.toString()).println(Commands.Block + "+++" + 
 							actingPlayer + "++" + actionStr + "++" + 
 							defensesThatCanBlockString.substring(0, defensesThatCanBlockString.length()));
@@ -177,7 +176,7 @@ public class GameControllerServerSide {
 												game.reshuffleCardAndDrawNewCard(defendingPlayer, defense.cardTypeRequired());
 												updatePlayerCards();
 												defense.defendAgainstPlayer(actingPlayer);
-												gameHistory += bluffCaller + " incorrectly accused blocker of bluffing.  " + defendingPlayer + " successfully blocked, thus ending the turn.:::";
+												gameHistory += bluffCaller + " incorrectly accused blocker of bluffing.  " + defendingPlayer + " successfully blocked, thus ending the turn.::::::";
 												return;
 											}else{
 												defendingPlayer.revealACard(bluffCaller + " called your bluff about having " + defense.cardTypeRequired());
@@ -216,10 +215,10 @@ public class GameControllerServerSide {
 		if(action.targetedPlayers() != null && action.targetedPlayers().size() == 1){
 			gameHistory += " against " + action.targetedPlayers().get(0);
 		}
-		gameHistory += " thus ending the turn.:::";
+		gameHistory += " thus ending the turn.:::::";
 		String moneyString = "";
 		for(Player player : players){
-			moneyString += player.getCoins() + ":";
+			moneyString += player.toString() + "++" + player.getCoins() + ":";
 		}
 		for(Player player : players){
 			nameToOutWriter.get(player.toString()).println(Commands.UpdateCoins + "+++" + moneyString);
@@ -235,13 +234,14 @@ public class GameControllerServerSide {
 	public Player advanceToNextPlayer() {
 		
 		List<Player> playersToRemove = new ArrayList<Player>();
-		for(int i = 0; i < players.size(); i++){
-			if(players.get(i).eliminated()){
-				playersToRemove.add(players.get(i));
+		for(Player player : players){
+			if(player.eliminated()){
+				playersToRemove.add(player);
+				nameToOutWriter.get(player.toString()).println(Commands.DEFEAT);
 			}
 		}
 		
-		nextPlayer = getNextPlayer(playersToRemove);//uisIdsToRemove);
+		nextPlayer = getNextPlayer(playersToRemove);
 		
 		
 		if(players.size() == 1){
@@ -281,36 +281,12 @@ public class GameControllerServerSide {
 	public void updatePlayerCards() {
 		String cardsString = Commands.UpdateCards.toString() + "+++";
 		for(Player player : players){
-			cardsString += (player.getFirstCard().getType() + ":" + player.getFirstCard().isRevealed() +
+			cardsString += player.toString() + "::" + (player.getFirstCard().getType() + ":" + player.getFirstCard().isRevealed() +
 					"::" + player.getSecondCard().getType() + ":" + player.getSecondCard().isRevealed() + "++");
 		}
-		for(int i = 0; i < players.size(); i++){
-			nameToOutWriter.get(players.get(i).toString()).println(cardsString + i);
+		for(Player player : players){
+			nameToOutWriter.get(player.toString()).println(cardsString + player.toString());
 		}
 		
 	}
-
-
-
-//	public void giveOtherPlayersChanceToCallBluff(PlayerWithChoices playerBeingCalled, ActionButton actionAttempting) {
-//		for(IndividualPlayer playerUi : allPlayerUis){
-//			if(!playerUi.forPlayer(playerBeingCalled)){
-//				playerUi.giveChanceToCallBluff(actionAttempting);
-//			}
-//		}
-//		
-//	}
-//
-//	public void closeAllOtherPopups(PlayerWithChoices player) {
-//		for(IndividualPlayer playerUi : allPlayerUis){
-//			if(!playerUi.forPlayer(player)){
-//				playerUi.hidePopup();
-//			}
-//		}
-//	}
-//
-//	public int getNumberOfRemainingPlayers() {
-//		return allPlayerUis.size();
-//	}
-
 }

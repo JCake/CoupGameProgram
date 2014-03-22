@@ -217,6 +217,7 @@ public class CoupServer {
 			}
 			indexedPlayerNames.add(indexedName );
 		}
+		playerNames = indexedPlayerNames;
 		
 		List<PrintWriter> originalPlayerWriters = new ArrayList<PrintWriter>(playerWriters);
 		List<BufferedReader> originalPlayerInputs = new ArrayList<BufferedReader>(playerInputs);

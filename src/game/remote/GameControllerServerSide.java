@@ -215,7 +215,7 @@ public class GameControllerServerSide {
 		if(action.targetedPlayers() != null && action.targetedPlayers().size() == 1){
 			gameHistory += " against " + action.targetedPlayers().get(0);
 		}
-		gameHistory += " thus ending the turn.:::::";
+		gameHistory += " thus ending the turn. :::::::";
 		String moneyString = "";
 		for(Player player : players){
 			moneyString += player.toString() + "++" + player.getCoins() + ":";

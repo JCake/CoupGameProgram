@@ -13,6 +13,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import javafx.application.Application;
 import javafx.application.Platform;
@@ -38,29 +40,34 @@ public class CoupApplicationClientSide extends Application {
 
 	private static boolean launched = false;
 	
+	private static final ExecutorService messageProcessingThread = Executors.newSingleThreadExecutor();
+	
 	@Override
 	public void start(Stage arg0) throws Exception {
 		showGameSelectionScreen(null);
 		launched = true;
 	}
-
-	public static void startNewGame() {
-		Platform.runLater(new Runnable(){
-
-			@Override
-			public void run() {
-				commonUi = new CommonKnowledgeUI(allPlayers.values());
-				playerUi = new PlayerUi(playerForUi,buttonLabels,out,in);
-				
-			}
-			
-		});
+	
+	private static String gameName;
+	
+	public static void startNewGame(){
+		startNewGame(gameName);
+	}
+	
+	public static void startNewGame(String gameName) {
+		CoupApplicationClientSide.gameName = gameName;
+		commonUi = new CommonKnowledgeUI(allPlayers.values(), gameName);
+		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in);
 		
 		CoupApplicationClientSide.processNextServerMessage(); //Wait for next command
+
 	}
 	
 	public static void processNextServerMessage()  {
-		String nextAction;
+		messageProcessingThread.execute(new Runnable(){
+			@Override
+			public void run() {
+				String nextAction;
 				try {
 					nextAction = in.readLine();
 				} catch (IOException e) {
@@ -228,8 +235,12 @@ public class CoupApplicationClientSide extends Application {
 							String[] firstCardDetails = cardDetailsPerCard[1].split(":");
 							String[] secondCardDetails = cardDetailsPerCard[2].split(":");
 							
-							allPlayers.get(playerName).replaceFirstCard(buildNewCard(firstCardDetails));
-							allPlayers.get(playerName).replaceSecondCard(buildNewCard(secondCardDetails));
+							if(allPlayers.containsKey(playerName)){
+								allPlayers.get(playerName).replaceFirstCard(buildNewCard(firstCardDetails));
+								allPlayers.get(playerName).replaceSecondCard(buildNewCard(secondCardDetails));
+							}else{
+								System.err.println("Coding error:  Could not find data for player named " + playerName);
+							}
 						}
 						Platform.runLater(new Runnable(){
 
@@ -246,7 +257,9 @@ public class CoupApplicationClientSide extends Application {
 					}
 				}
 				
-
+			}
+			
+		});
 	}
 
 

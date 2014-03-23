@@ -19,6 +19,10 @@ public class CommonKnowledgeUI extends Stage {
 	private int ySpacing = 150;
 	
 	public CommonKnowledgeUI(Collection<Player> allPlayers){
+		this(allPlayers,"");
+	}
+	
+	public CommonKnowledgeUI(Collection<Player> allPlayers, String gameName){
 		
 		AnchorPane root = new AnchorPane();
 		
@@ -42,7 +46,7 @@ public class CommonKnowledgeUI extends Stage {
 		root.getChildren().add(currentPlayer);
 		
 		Scene scene = new Scene(root, 500, 50 + ySpacing * ((allPlayers.size() + 1) / 2));
-        this.setTitle("Common Knowledge");
+        this.setTitle("Common Knowledge - " + gameName);
         this.setResizable(true);
         this.setScene(scene);
         this.show();

@@ -145,15 +145,15 @@ public class PlayerUi extends Stage{
         
         winnerText = new Text("YOU WIN!");
 		winnerText.setFont(Font.font("Verdana", 20));
-		winnerText.setLayoutX(0);
-		winnerText.setLayoutY(40);
+		winnerText.setLayoutX(5);
+		winnerText.setLayoutY(45);
 		winnerText.setFill(Color.WHITE);
 		winnerText.setVisible(false); //hide until end of game
 		pane.getChildren().add(winnerText );
 		
 		loserText = new Text("YOU LOSE! :(");
 		loserText.setFont(Font.font("Verdana", 20));
-		loserText.setLayoutX(0);
+		loserText.setLayoutX(5);
 		loserText.setLayoutY(45);
 		loserText.setFill(Color.WHITE);
 		loserText.setVisible(false); //hide until end of game
@@ -170,11 +170,13 @@ public class PlayerUi extends Stage{
 		pane.getChildren().add(gameHistoryPane);
 		
 		cannotPlayAgainText = new Text("Other players declined, choose: ");
+		cannotPlayAgainText.setLayoutX(5);
 		cannotPlayAgainText.setLayoutY(15);
 		cannotPlayAgainText.setVisible(false);
 		pane.getChildren().add(cannotPlayAgainText);
 		
 		playAgainButton = new Button("Play again with same players");
+		playAgainButton.setLayoutX(5);
 		playAgainButton.setVisible(false);
 		playAgainButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override

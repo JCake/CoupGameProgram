@@ -334,13 +334,13 @@ public class PlayerUi extends Stage{
 	public void checkIfWantToBlock(final String playerAttemptingAction,
 			final String actionToBlock, List<String> possibleDefenses) {
 		String blockingTextStr = playerAttemptingAction + " is attempting to use " + actionToBlock 
-				+" (against you).  Would you like to block? Possible blocking actions are:";
+				+" (against you).  Would you like to block?";
+		blockingText.setText(blockingTextStr);
 		currentDefenseOptions = possibleDefenses;
 		for(int i = 0; i < possibleDefenses.size(); i++){
-			blockingTextStr += "\r\n" + (i+1) + ": " + possibleDefenses.get(i);
 			allBlockingButtons.get(i).setVisible(true);
+			allBlockingButtons.get(i).setText("Block by claiming to have: " + possibleDefenses.get(i));
 		}
-		blockingText.setText(blockingTextStr);
 		blockingPane.setVisible(true);
 		
 	}

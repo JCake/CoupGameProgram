@@ -4,6 +4,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.Scene;
@@ -40,6 +42,16 @@ public class GameSelectionUI extends Stage {
 		}
 		nameField.setLayoutX(200);
 		nameField.setLayoutY(currentY - 15);
+		nameField.textProperty().addListener(new ChangeListener<String>() {
+	        private final int maxLength = 25;
+			@Override
+	        public void changed(final ObservableValue<? extends String> ov, final String oldValue, final String newValue) {
+	            if (nameField.getText().length() > maxLength) {
+	                String s = nameField.getText().substring(0, maxLength);
+	                nameField.setText(s);
+	            }
+	        }
+	    });
 		pane.getChildren().add(nameField);
 		currentY += 40;
 		

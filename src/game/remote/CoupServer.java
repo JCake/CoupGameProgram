@@ -79,6 +79,12 @@ public class CoupServer {
 		BufferedReader initialConnectionPrintReader = new BufferedReader(
 				new InputStreamReader(initialConnectionClientSocket.getInputStream()));
 		String gameNameInfo = initialConnectionPrintReader.readLine();
+		
+		if(gameNameInfo.equals("ClearAllInactivePorts")){
+			clearAllInactiveGames(availablePortNumbers);
+			return;
+		}
+		
 		if(currentlyAvailableGames.contains(gameNameInfo)){
 			joinExistingGame(availablePortNumbers,
 					initialConnectionPrintWriter, gameNameInfo);
@@ -101,6 +107,27 @@ public class CoupServer {
 			createNewGame(availablePortNumbers, initialConnectionPrintWriter,
 					initialConnectionPrintReader, gameNameInfo);
 		}
+	}
+
+	private static void clearAllInactiveGames(
+			Collection<Integer> availablePortNumbers) {
+		for(List<ServerSocket> gameSockets : gameNameToSockets.values()){
+			for(ServerSocket socket : gameSockets){
+				int portOpeningUp = socket.getLocalPort();
+				try {
+					socket.close();
+					availablePortNumbers.add(portOpeningUp);
+				} catch (IOException e) {
+					e.printStackTrace();
+					System.err.println("Could not reclaim port " + portOpeningUp);
+				}
+			}
+		}
+		gameNameToNumberAvailableSeats = new HashMap<String,Integer>();
+		gameNameToPlayerNames = new HashMap<String,List<String>>();
+		gameNameToPrintWriters = new HashMap<String,List<PrintWriter>>();
+		gameNameToBufferedReaders = new HashMap<String,List<BufferedReader>>();
+		gameNameToSockets = new HashMap<String,List<ServerSocket>>();
 	}
 
 	private static String currentAvailableGamesInfo(

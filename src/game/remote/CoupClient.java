@@ -19,19 +19,12 @@ import javafx.application.Application;
 public class CoupClient {
 
 	private static BufferedReader initialInput;
-	private static String hostName = "";
+	private static String hostName = "coup.matthew-steele.com";
 	
 	public static void main(String[] args){
-		BufferedReader stdIn =
-				new BufferedReader(new InputStreamReader(System.in));
-		
 		if(args.length < 1){
-			System.out.println("Enter IP address of server.");
-			try {
-				hostName  = stdIn.readLine();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
+			System.out.println("Signing on to server coup.matthew-steele.com. ");
+			System.out.println("(To specify a different server, exit the client and run again with the server name as a command line argument.) ");
 		}else{
 			hostName  = args[0];
 		}
@@ -51,7 +44,6 @@ public class CoupClient {
 			String[] gameOptionsInfo = firstReadLine.split("\\+\\+\\+\\+\\+\\+"); //First it sends a list of available games.
 			String[] allGames = null;
 			if(gameOptionsInfo.length > 1){
-				System.out.println("Existing games: ");
 				allGames = gameOptionsInfo[1].split("\\+\\+\\+");
 			}
 			CoupApplicationClientSide.gameOptions = allGames;

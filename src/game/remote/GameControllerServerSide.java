@@ -76,6 +76,9 @@ public class GameControllerServerSide {
 		Action action = playerActionMaps.get(actingPlayer.toString()).get(actionStringKey);
 		
 		gameHistory += actingPlayer + " attempted " + actionString(action) + ":::";
+		for(Player nonEliminatedPlayer : players){
+			nameToOutWriter.get(nonEliminatedPlayer.toString()).println(Commands.ShowSelectedAction + "+++" + actionString(action));
+		}
 		
 		CardType cardTypeRequired = action.cardTypeRequired();
 		if(cardTypeRequired != null){

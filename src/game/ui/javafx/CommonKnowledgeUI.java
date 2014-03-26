@@ -62,5 +62,10 @@ public class CommonKnowledgeUI extends Stage {
 		System.out.println("Updating as turn for " + currentPlayerTurn);
 		currentPlayer.setText("Current Player: " + currentPlayerTurn);
 	}
+
+	public void updateSelectedAction(String details) {
+		// TODO Auto-generated method stub
+		currentPlayer.setText(currentPlayer.getText() + "\r\n Has selected " + details);
+	}
 	
 }

@@ -137,6 +137,17 @@ public class CoupApplicationClientSide extends Application {
 					String[] actionAndDetails = nextAction.split("\\+\\+\\+");
 					String action = actionAndDetails[0];
 					final String details = actionAndDetails[1];
+					
+					if(action.equals(Commands.ShowSelectedAction.toString())){
+						Platform.runLater(new Runnable(){
+							@Override
+							public void run(){
+								commonUi.updateSelectedAction(details);
+							}
+						});
+						processNextServerMessage();
+					}
+					
 					if(action.equals(Commands.GAME_OVER.toString())){
 						Platform.runLater(new Runnable(){
 							@Override

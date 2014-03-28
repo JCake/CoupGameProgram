@@ -79,8 +79,7 @@ public class CoupClient {
 			System.out.println("Joining game " + gameName + " with user name " + userName);
 			System.out.println("Game will start when all players have joined.");
 
-			CoupClient.startNewGame(out, in);
-			CoupApplicationClientSide.startNewGame(gameName);
+			CoupApplicationClientSide.showWaitScreen(gameName, userName, out, in);
 		} catch (IOException e) {
 			System.out.println("ERROR!");
 			e.printStackTrace();

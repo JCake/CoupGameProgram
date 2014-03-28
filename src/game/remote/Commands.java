@@ -11,5 +11,6 @@ public enum Commands {
 	CallBluff,
 	Block,
 	DEFEAT, VICTORY, GAME_OVER,
-	ShowSelectedAction
+	ShowSelectedAction,
+	AddPlayer, StartGame
 }

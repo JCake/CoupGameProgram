@@ -167,6 +167,10 @@ public class CoupServer {
 		final List<String> playerNames = gameNameToPlayerNames.get(gameName);
 		final List<ServerSocket> gameSockets = gameNameToSockets.get(gameName);
 		
+		for(PrintWriter writer : printWriters){
+			writer.println(Commands.StartGame);
+		}
+		
 		gameThreads.execute(new Runnable(){
 
 			@Override
@@ -178,7 +182,6 @@ public class CoupServer {
 					terminateGame(printWriters, gameSockets);
 				}
 			}
-			
 		});
 		
 		gameNameToBufferedReaders.remove(gameName);
@@ -211,8 +214,21 @@ public class CoupServer {
 		gameNameToPrintWriters.get(gameName).add(printWriter);
 		BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
 		gameNameToBufferedReaders.get(gameName).add(bufferedReader);
+		
 		printWriter.println("Player Name?");
-		gameNameToPlayerNames.get(gameName).add(bufferedReader.readLine());
+		String playerName = bufferedReader.readLine();
+		gameNameToPlayerNames.get(gameName).add(playerName);
+		
+		for(String name : gameNameToPlayerNames.get(gameName)){
+			printWriter.println(Commands.AddPlayer + ":" + name);
+		}
+		
+		for(PrintWriter playerWriter : gameNameToPrintWriters.get(gameName)){
+			if(playerWriter != printWriter){ //avoid adding our own name twice
+				playerWriter.println(Commands.AddPlayer + ":" + playerName);
+			}
+		}
+		
 		return serverSocket;
 	}
 

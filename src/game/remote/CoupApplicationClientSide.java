@@ -28,6 +28,8 @@ public class CoupApplicationClientSide extends Application {
 	public static PrintWriter out;
 	public static BufferedReader in;
 	
+	private static WaitScreenUI waitScreen;
+	
 	public static String[] gameOptions; //TODO encapsulate better
 	private static PlayerUi playerUi;
 	private static CommonKnowledgeUI commonUi;
@@ -48,6 +50,68 @@ public class CoupApplicationClientSide extends Application {
 		launched = true;
 	}
 	
+	public static void showWaitScreen(final String gameName, final String yourName, PrintWriter out, BufferedReader in){
+		CoupApplicationClientSide.out = out;
+		CoupApplicationClientSide.in = in;
+		CoupApplicationClientSide.gameName = gameName;
+		Platform.runLater(new Runnable(){
+			@Override
+			public void run() {
+				// FIXME there is a memory leak with creating a new UI each time - need to figure out what to do with old UIs
+				waitScreen = new WaitScreenUI(gameName,yourName);
+				
+				if(commonUi != null){
+					commonUi.hide();
+				}
+				if(playerUi != null){
+					playerUi.hide();
+				}
+			}
+		});
+		
+		processNextPlayerJoinedMessage();
+	}
+	
+	private static void processNextPlayerJoinedMessage() {
+		// TODO Auto-generated method stub
+		messageProcessingThread.execute(new Runnable(){
+			@Override
+			public void run() {
+				String nextAction;
+				try {
+					nextAction = in.readLine();
+				} catch (IOException e) {
+					e.printStackTrace();
+					throw new RuntimeException(e);
+				}
+				if(nextAction.startsWith(Commands.AddPlayer.toString())){
+					final String newPlayer = nextAction.substring(nextAction.indexOf(":") + 1);
+					Platform.runLater(new Runnable(){
+						@Override
+						public void run() {
+							waitScreen.addPlayer(newPlayer);
+						}
+					});
+					processNextPlayerJoinedMessage();
+				}else{ //Should be Commands.StartGame
+					Platform.runLater(new Runnable(){
+						@Override
+						public void run() {
+							waitScreen.hide();
+							try{
+								CoupClient.startNewGame(out, in);
+							} catch (IOException e) {
+								System.out.println("ERROR!");
+								e.printStackTrace();
+							}
+							startNewGame();
+						}
+					});
+				}
+			}
+		});
+	}
+
 	private static String gameName;
 	
 	public static void startNewGame(){
